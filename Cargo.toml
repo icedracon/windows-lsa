@@ -4,10 +4,13 @@ version = "0.1.0-dev"
 edition = "2021"
 license = "MIT"
 authors = ["zevs"]
-description = "Thin safe wrapper around Windows LSA Kerberos authentication package (LsaConnectUntrusted / KerbRetrieveEncodedTicket / KerbSubmitTicket / KerbQueryTicketCache). Pre-alpha."
+description = "Safe wrapper around Windows LSA Kerberos authentication package (LsaConnectUntrusted, KerbRetrieveTicket, KerbSubmitTicket, KerbQueryTicketCache, KerbPurgeTicketCache)"
 repository = "https://github.com/icedracon/windows-lsa"
-keywords = ["windows", "lsa", "kerberos", "security"]
-categories = ["os::windows-apis", "authentication"]
+homepage = "https://github.com/icedracon/windows-lsa"
+documentation = "https://docs.rs/windows-lsa"
+readme = "README.md"
+keywords = ["windows", "lsa", "kerberos", "ticket-cache", "authentication"]
+categories = ["os::windows-apis", "authentication", "api-bindings"]
 
 [dependencies]
 zeroize = { version = "1", features = ["derive"] }
