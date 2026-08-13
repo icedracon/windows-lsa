@@ -79,7 +79,7 @@ fn main() -> windows_lsa::Result<()> {
   Control Manager wrapper for the "run as SYSTEM" side of the same tooling.
 
 Together these enable "run adhammer as yourself" and impersonation-based
-lateral-movement workflows without dragging in Impacket or Rubeus.
+lateral-movement workflows without dragging in spec-vector captures or popular Kerberos clients.
 
 ## License
 
