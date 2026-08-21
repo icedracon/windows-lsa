@@ -3,21 +3,19 @@
 //!
 //! The Kerberos submit/query/purge/retrieve request+response structures are
 //! defined locally as `#[repr(C)]` POD to keep this crate independent of the
-//! specific feature-gating of the `windows` crate for each individual
-//! `KERB_*` type — only the LSA transport (`Lsa*` functions, `HANDLE`,
-//! `NTSTATUS`, `LSA_STRING`, `UNICODE_STRING`, `LUID`) is imported from
-//! `windows`.
+//! specific feature-gating of any single FFI provider — only the LSA transport
+//! (`Lsa*` functions, `HANDLE`, `NTSTATUS`, `LSA_STRING`, `UNICODE_STRING`,
+//! `LUID`) is imported from [`win32_min`].
 
 use core::ffi::c_void;
 use core::mem::size_of;
 use core::ptr;
 
-use windows::Win32::Foundation::{HANDLE, LUID as WinLuid, NTSTATUS, UNICODE_STRING};
-use windows::Win32::Security::Authentication::Identity::{
+use win32_min::foundation::{HANDLE, LUID as WinLuid, NTSTATUS, UNICODE_STRING};
+use win32_min::lsa_auth::{
     LsaCallAuthenticationPackage, LsaConnectUntrusted, LsaDeregisterLogonProcess,
     LsaFreeReturnBuffer, LsaLookupAuthenticationPackage, LSA_STRING,
 };
-use windows_core::{PSTR, PWSTR};
 
 use crate::error::{Error, Result};
 use crate::types::{AuthPackageId, KrbCred, Luid, TicketCacheInfo};
@@ -143,6 +141,16 @@ struct KerbPurgeTktCacheRequest {
     // optional trailing UTF-16 payload the UNICODE_STRINGs may point into
 }
 
+/// Zero-initialized `UNICODE_STRING` (no default impl on the raw type).
+#[inline]
+fn empty_unicode_string() -> UNICODE_STRING {
+    UNICODE_STRING {
+        Length: 0,
+        MaximumLength: 0,
+        Buffer: core::ptr::null_mut(),
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Public handle types.
 // ---------------------------------------------------------------------------
@@ -167,7 +175,7 @@ impl Lsa {
     /// `LsaConnectUntrusted` — obtain an LSA handle usable by non-privileged
     /// code. This is what every user-mode Kerberos client uses.
     pub fn connect_untrusted() -> Result<LsaHandle> {
-        let mut h = HANDLE::default();
+        let mut h: HANDLE = ptr::null_mut();
         // SAFETY: out-pointer is valid, no aliasing, LsaConnectUntrusted has
         // no other pre-conditions.
         let status = unsafe { LsaConnectUntrusted(&mut h) };
@@ -178,7 +186,7 @@ impl Lsa {
 
 impl Drop for LsaHandle {
     fn drop(&mut self) {
-        if !self.handle.is_invalid() {
+        if !self.handle.is_null() {
             // Best-effort. There is nothing sensible we can do with the return
             // value in Drop — mirrors what every other LSA client does.
             unsafe {
@@ -197,7 +205,7 @@ impl LsaHandle {
         let lsa_str = LSA_STRING {
             Length: NAME.len() as u16,
             MaximumLength: NAME.len() as u16,
-            Buffer: PSTR(NAME.as_ptr() as *mut u8),
+            Buffer: NAME.as_ptr() as *mut u8,
         };
         let mut pkg: u32 = 0;
         let status = unsafe { LsaLookupAuthenticationPackage(self.handle, &lsa_str, &mut pkg) };
@@ -215,7 +223,7 @@ impl LsaHandle {
         let req = KerbRetrieveTktRequest {
             message_type: KERB_RETRIEVE_TICKET,
             logon_id: to_win_luid(luid),
-            target_name: UNICODE_STRING::default(),
+            target_name: empty_unicode_string(),
             ticket_flags: 0,
             cache_options: KERB_RETRIEVE_TICKET_AS_KERB_CRED,
             encryption_type: KERB_ETYPE_DEFAULT,
@@ -369,20 +377,20 @@ impl LsaHandle {
             }
         }
         let server_name = if spn_bytes == 0 {
-            UNICODE_STRING::default()
+            empty_unicode_string()
         } else {
             // SAFETY: the buffer trailer holds a valid UTF-16 sequence.
             UNICODE_STRING {
                 Length: spn_bytes as u16,
                 MaximumLength: spn_bytes as u16,
-                Buffer: PWSTR(unsafe { buf.as_mut_ptr().add(hdr_len) as *mut u16 }),
+                Buffer: unsafe { buf.as_mut_ptr().add(hdr_len) as *mut u16 },
             }
         };
         let hdr = KerbPurgeTktCacheRequest {
             message_type: KERB_PURGE_TICKET_CACHE,
             logon_id: to_win_luid(luid),
             server_name,
-            realm_name: UNICODE_STRING::default(),
+            realm_name: empty_unicode_string(),
         };
         // SAFETY: buf is at least hdr_len bytes long; hdr is POD.
         unsafe {
@@ -402,7 +410,7 @@ impl LsaHandle {
     fn call_raw(&self, pkg: AuthPackageId, buf: *const c_void, len: u32) -> Result<LsaResponse> {
         let mut ret_buf: *mut c_void = ptr::null_mut();
         let mut ret_len: u32 = 0;
-        let mut proto_status: i32 = 0;
+        let mut proto_status: NTSTATUS = 0;
 
         // SAFETY: all pointers are valid and non-aliasing; buf/len describe a
         // valid caller-owned request; the three out-parameters are exclusively
@@ -413,9 +421,9 @@ impl LsaHandle {
                 pkg.0,
                 buf,
                 len,
-                Some(&mut ret_buf),
-                Some(&mut ret_len),
-                Some(&mut proto_status),
+                &mut ret_buf,
+                &mut ret_len,
+                &mut proto_status,
             )
         };
         check(status, "LsaCallAuthenticationPackage")?;
@@ -471,12 +479,12 @@ fn to_win_luid(luid: Option<Luid>) -> WinLuid {
 fn check(status: NTSTATUS, api: &'static str) -> Result<()> {
     // NT_SUCCESS: high bit clear. LSA returns exactly STATUS_SUCCESS for the
     // transport-level calls we make, so a strict == 0 check is fine.
-    if status.0 == 0 {
+    if status == 0 {
         Ok(())
     } else {
         Err(Error::Lsa {
             api,
-            status: status.0 as u32,
+            status: status as u32,
         })
     }
 }
@@ -487,7 +495,7 @@ fn unicode_string_to_string(us: &UNICODE_STRING) -> String {
     }
     let len_words = (us.Length as usize) / 2;
     // SAFETY: LSA-supplied UNICODE_STRING; Buffer is valid for Length bytes.
-    let slice = unsafe { core::slice::from_raw_parts(us.Buffer.0, len_words) };
+    let slice = unsafe { core::slice::from_raw_parts(us.Buffer, len_words) };
     String::from_utf16_lossy(slice)
 }
 
@@ -495,9 +503,7 @@ fn unicode_string_to_string(us: &UNICODE_STRING) -> String {
 // width (real byte-for-byte checks against the Windows SDK live in tests/).
 #[cfg(target_pointer_width = "64")]
 const _: () = {
-    // KerbSubmitTktRequest on x64: 4 + 4pad + 8(LUID) + 4(Flags) + 4pad(KeyType align?) + 12(key32) + 4 + 4 = 40
-    // Layout: message_type u32(4) + LUID(8, align 4) + flags u32(4) + KerbCryptoKey32{i32 u32 u32}(12) + kerb_cred_size u32(4) + kerb_cred_offset u32(4)
-    // = 4 + 8 + 4 + 12 + 4 + 4 = 36. No trailing padding (all u32/i32).
+    // KerbSubmitTktRequest: u32(4) + LUID(8) + flags u32(4) + KerbCryptoKey32(12) + u32(4) + u32(4) = 36
     assert!(size_of::<KerbSubmitTktRequest>() == 36);
     // KerbQueryTktCacheRequest: u32 + LUID = 12
     assert!(size_of::<KerbQueryTktCacheRequest>() == 12);

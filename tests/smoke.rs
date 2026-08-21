@@ -59,9 +59,8 @@ fn connect_untrusted_and_lookup_kerberos() {
     };
     let pkg = handle.kerberos_package().expect("kerberos package lookup");
     // Kerberos SSP is generally id 2 on modern Windows, but we don't rely on
-    // that — we only assert we got *some* id back.
-    assert!(pkg.0 != 0 || pkg.0 == 0); // no-op assertion — we care it didn't panic
-    let _ = pkg;
+    // that — we only care that the call didn't panic and returned an id.
+    let _ = pkg.0;
 }
 
 #[cfg(windows)]
