@@ -3,18 +3,18 @@
 //! Thin, safe wrapper around the Windows Local Security Authority (LSA)
 //! **Kerberos authentication package** primitives:
 //!
-//! - [`LsaConnectUntrusted`] — get a handle to LSA that non-privileged code can use.
-//! - [`LsaLookupAuthenticationPackage`] — resolve the `"Kerberos"` package id.
-//! - [`LsaCallAuthenticationPackage`] with:
+//! - `LsaConnectUntrusted` — get a handle to LSA that non-privileged code can use.
+//! - `LsaLookupAuthenticationPackage` — resolve the `"Kerberos"` package id.
+//! - `LsaCallAuthenticationPackage` with:
 //!   - `KerbRetrieveTicketMessage`  — pull the current TGT.
 //!   - `KerbQueryTicketCacheMessage` — enumerate the LSA ticket cache.
 //!   - `KerbSubmitTicketMessage`    — inject a KRB-CRED into the cache.
 //!   - `KerbPurgeTicketCacheMessage` — purge specific / all entries.
 //!
-//! Status: **pre-alpha, 0.1.0-dev.** API surface is stable-ish, but structural
-//! parsing of the returned Kerberos payloads is minimal (raw byte extraction
-//! only — no ASN.1 decode, no KRB-CRED wrapping). Enough to prove the LSA
-//! plumbing works round-trip; not enough to be a drop-in Mimikatz replacement.
+//! The 0.2 series implements the LSA transport and typed ticket-cache
+//! workflows. Structural parsing of returned Kerberos payloads remains
+//! intentionally minimal: raw bytes are exposed without ASN.1 decoding or
+//! KRB-CRED construction.
 //!
 //! On non-Windows targets the crate compiles to a stub that returns
 //! [`Error::Unsupported`] for every call, so downstream crates can `cfg`-gate

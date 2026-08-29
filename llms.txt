@@ -1,0 +1,13 @@
+# windows-lsa
+
+> Safe Rust access to the Windows Local Security Authority Kerberos
+> authentication package and the current logon session's ticket cache.
+
+- [README](https://github.com/icedracon/windows-lsa/blob/main/README.md)
+- [API documentation](https://docs.rs/windows-lsa)
+- [Ecosystem map](https://github.com/icedracon/win32-min/blob/master/ECOSYSTEM.md)
+- [ABI foundation](https://github.com/icedracon/win32-min)
+
+The crate wraps untrusted LSA connection, Kerberos package lookup, ticket-cache
+query, ticket retrieval, KRB-CRED submission, and purge messages. It does not
+decode ASN.1 or construct KRB-CRED wrappers from raw Ticket bytes.

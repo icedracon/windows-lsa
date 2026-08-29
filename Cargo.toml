@@ -1,15 +1,16 @@
 [package]
 name = "windows-lsa"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
+rust-version = "1.85"
 license = "MIT"
 authors = ["zevs"]
-description = "Safe wrapper around Windows LSA Kerberos authentication package (LsaConnectUntrusted, KerbRetrieveTicket, KerbSubmitTicket, KerbQueryTicketCache, KerbPurgeTicketCache). Built on win32-min (hand-rolled FFI, no windows-rs)."
+description = "Safe Rust access to Windows LSA Kerberos ticket-cache operations for authentication research and administration."
 repository = "https://github.com/icedracon/windows-lsa"
 homepage = "https://github.com/icedracon/windows-lsa"
 documentation = "https://docs.rs/windows-lsa"
 readme = "README.md"
-keywords = ["windows", "lsa", "kerberos", "ticket-cache", "authentication"]
+keywords = ["windows", "lsa", "kerberos", "authentication", "security"]
 categories = ["os::windows-apis", "authentication", "api-bindings"]
 
 [dependencies]
@@ -17,4 +18,4 @@ zeroize = { version = "1", features = ["derive"] }
 thiserror = "2"
 
 [target.'cfg(windows)'.dependencies]
-win32-min = { version = "0.1", features = ["lsa-auth"] }
+win32-min = { version = "0.1.2", features = ["lsa-auth"] }

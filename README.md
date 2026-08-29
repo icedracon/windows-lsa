@@ -2,6 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/windows-lsa.svg)](https://crates.io/crates/windows-lsa)
 [![Docs.rs](https://docs.rs/windows-lsa/badge.svg)](https://docs.rs/windows-lsa)
+[![CI](https://github.com/icedracon/windows-lsa/actions/workflows/ci.yml/badge.svg)](https://github.com/icedracon/windows-lsa/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Safe Rust wrapper around the Windows **Local Security Authority (LSA)**
@@ -13,8 +14,11 @@ LSA directly rather than shelling out to `klist`.
 
 ## Status
 
-**`0.1.0-dev`** — pre-alpha, expect breaking changes before `0.1.0`. Part of
-the [icedracon](https://github.com/icedracon) Rust offensive-AD ecosystem.
+**`0.2` tested companion crate.** LSA connection, Kerberos package lookup,
+ticket-cache query, retrieval, submission, and purge paths are implemented on
+top of `win32-min`; APIs may still evolve before 1.0. See the central
+[`win32-min` ecosystem map](https://github.com/icedracon/win32-min/blob/master/ECOSYSTEM.md)
+for compatibility and maturity information.
 
 ## What it does
 
@@ -70,6 +74,8 @@ fn main() -> windows_lsa::Result<()> {
 
 ## Related icedracon crates
 
+- [`win32-min`](https://github.com/icedracon/win32-min) — verified,
+  dependency-free Win32 ABI foundation used by this crate.
 - [`windows-sspi-shim`](https://github.com/icedracon/windows-sspi-shim) —
   SSPI Negotiate ergonomics over Devolutions `sspi` for callers that want
   `seal`/`unseal` rather than raw ticket bytes.
@@ -78,8 +84,14 @@ fn main() -> windows_lsa::Result<()> {
 - [`windows-scm`](https://github.com/icedracon/windows-scm) — local Service
   Control Manager wrapper for the "run as SYSTEM" side of the same tooling.
 
-Together these enable "run adhammer as yourself" and impersonation-based
-lateral-movement workflows without dragging in spec-vector captures or popular Kerberos clients.
+Together these cover identity, authentication, telemetry, and local
+administration workflows for Windows security research and defensive tooling.
+
+## Dependencies
+
+- `win32-min >= 0.1.2, < 0.2` with only `lsa-auth` enabled.
+- `zeroize` for ticket payload cleanup and `thiserror` for the error taxonomy.
+- No async runtime or generated Windows bindings.
 
 ## License
 

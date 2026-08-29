@@ -51,7 +51,7 @@ pub struct AuthPackageId(pub u32);
 /// `KRB-CRED` structure. For values returned by [`crate::retrieve_tgt`] the
 /// bytes are the raw `EncodedTicket` field of `KERB_EXTERNAL_TICKET` (i.e.
 /// the ASN.1-DER `Ticket`, not a full `KRB-CRED`); wrapping that into a
-/// KRB-CRED before it can be re-submitted is out of scope for this pre-alpha.
+/// KRB-CRED before it can be re-submitted is outside the current API scope.
 #[derive(Clone, Default, Zeroize, ZeroizeOnDrop)]
 pub struct KrbCred {
     pub encoded: Vec<u8>,
