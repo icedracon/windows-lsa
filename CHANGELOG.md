@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added a runnable read-only Kerberos ticket-cache metadata workflow.
+
 ## 0.2.1 - 2026-08-29
 
 - Corrected stale pre-alpha and dependency documentation after the 0.2 FFI

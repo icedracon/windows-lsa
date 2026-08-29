@@ -7,6 +7,8 @@
 - [API documentation](https://docs.rs/windows-lsa)
 - [Ecosystem map](https://github.com/icedracon/win32-min/blob/master/ECOSYSTEM.md)
 - [ABI foundation](https://github.com/icedracon/win32-min)
+- [Kerberos cache workflow](https://github.com/icedracon/windows-lsa/blob/main/examples/kerberos_cache.rs)
+- [Research workflow index](https://github.com/icedracon/win32-min/blob/master/RESEARCH-WORKFLOWS.md)
 
 The crate wraps untrusted LSA connection, Kerberos package lookup, ticket-cache
 query, ticket retrieval, KRB-CRED submission, and purge messages. It does not

@@ -50,6 +50,20 @@ fn main() -> windows_lsa::Result<()> {
 }
 ```
 
+## Research workflow
+
+Inventory the current logon session's Kerberos ticket metadata without
+exporting or modifying ticket material:
+
+```powershell
+cargo run --example kerberos_cache
+```
+
+The example uses an untrusted LSA connection and can legitimately return an
+empty cache for a local-account session. See the ecosystem's
+[`RESEARCH-WORKFLOWS.md`](https://github.com/icedracon/win32-min/blob/master/RESEARCH-WORKFLOWS.md)
+for the complete workflow set.
+
 ## What works / what does not (this version)
 
 - Working:
