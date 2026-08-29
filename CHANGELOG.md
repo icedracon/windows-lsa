@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added a runnable read-only Kerberos ticket-cache metadata workflow.
+- Added scheduled RustSec advisory auditing and weekly dependency monitoring.
 
 ## 0.2.1 - 2026-08-29
 
